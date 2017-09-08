@@ -12,7 +12,10 @@ my_function <- function(x, ident = FALSE) {
   y
 }
 
-# Loads data files
-
-  load("data/admission_data_clean.rda")
-  load("data/emergency_adms.rda")
+# Loads data files into Global Environment
+# Note: this will overwrite objects with the same names
+# in the Global Environment.
+load_data <- function() {
+  load("data/admission_data_clean.rda", .GlobalEnv)
+  load("data/emergency_adms.rda", .GlobalEnv)
+}
