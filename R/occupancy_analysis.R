@@ -20,10 +20,6 @@ get_spells_sample <- function(spells_df, number_of_patients, ID_col_name = "Pseu
 }
 
 
-################## needs to be completed
-#must add an interval column ("Stay" to data fram before following functions can be used)
-#function being made in practice script
-ordered_times_df$Stay <- interval(ordered_times_df$CSPAdmissionTime, ordered_times_df$CSPDischargeTime)
 
 
 
@@ -31,6 +27,9 @@ ordered_times_df$Stay <- interval(ordered_times_df$CSPAdmissionTime, ordered_tim
 #includes any spells, any part of which overlaps the specified interval
 
 interval_occupancy <- function (start_time, end_time, df = ordered_times_df, df_col = "Stay"){
+  
+  #adds a "Stay" interval column to data frame
+  df$Stay <- interval(df$CSPAdmissionTime, df$CSPDischargeTime)
   
   test_interval <- interval(start_time, end_time)
   
@@ -50,6 +49,9 @@ interval_occupancy <- function (start_time, end_time, df = ordered_times_df, df_
 
 interval_occupancy_day <- function(date_ymd_in_quotes, df = ordered_times_df, df_col = "Stay"){
   
+  #adds a "Stay" interval column to data frame
+  df$Stay <- interval(df$CSPAdmissionTime, df$CSPDischargeTime)
+  
   #automatically sets start and end times to beginning and end of the day
   start_time <- paste(date_ymd_in_quotes, "00:00:00 BST", sep = " ")
   end_time <- paste(date_ymd_in_quotes, "23:59:59 BST", sep = " ")
@@ -64,21 +66,25 @@ interval_occupancy_day <- function(date_ymd_in_quotes, df = ordered_times_df, df
 
 
 
-#function to find instantaneous occupancy at a given time
+#function to find instantaneous hospital occupancy at a given time
 
-hospital_occupancy <- function(date_and_time, df = ordered_times_df, df_col = "Stay"){
+hospital_occupancy <- function(date_and_time, df = ordered_times_df, time_in_col = "CSPAdmissionTime", time_out_col = "CSPDischargeTime"){
+  
+  #adds a "Stay" interval column to data frame
+  df$Stay <- interval(df[,time_in_col], df[,time_out_col]) 
   
   test_interval <- interval(date_and_time, date_and_time)
-  overlap_test <- int_overlaps(df[,df_col], test_interval)
+  overlap_test <- int_overlaps(df$Stay, test_interval)
   sum(overlap_test, na.rm = T)
   
 }
 
 
 
+
 #function to plot hourly occupancy in a given time interval
 # put the data frame you want to plot from into plot_df argument
-plot_hourly_occupancy <- function(start_date_time, end_date_time, plot_df = ordered_times_df){
+plot_hospital_occupancy <- function(start_date_time, end_date_time, plot_df = ordered_times_df){
   
   #creates a data frame to help with ggplot
   time <- seq(as.POSIXlt(start_date_time), as.POSIXlt(end_date_time), by="hours")
@@ -87,8 +93,10 @@ plot_hourly_occupancy <- function(start_date_time, end_date_time, plot_df = orde
   
   colours <- ifelse(hourly_occupancy >= 450, "red", "blue")  ###arbitrary max value - needs to be changed
   
-  ggplot(occupancy_df, aes(x=time, y=hourly_occupancy), main = "Hourly Occupancy") + geom_line() +geom_point(col = colours) + xlab("Time") + 
+  ggplot(occupancy_df, aes(x=time, y=hourly_occupancy)) + geom_line() +geom_point(col = colours) + xlab("Time") + 
     ylab("Hospitial Occupancy") + ggtitle("Hourly Hospital Occupancy") 
   
 }
+
+
 
