@@ -13,4 +13,5 @@ load_libraries <- function(){
   library(lubridate)
   library(ggplot2)
   library(testthat)
+  library(reshape2)
 }
