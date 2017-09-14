@@ -50,7 +50,15 @@ plot_ward_occupancies <- function(start_date_time, end_date_time, wards_as_vect,
     
     #print(df_to_plot)
     
+    #variables to set pip spacing on x axis depending on length of time used
+    no_of_pips <- length(time) %/% 12
+    no_of_pips_string <- paste(no_of_pips, "hour")
+ 
+    
     #uses melt function from reshape2 library to allow us to plot the whole data frame 
     df_to_plot <- melt(df_to_plot, id.vars = 'Time', variable.name = 'Ward')
-    ggplot(df_to_plot, aes(x= df_to_plot[,1], y = value)) + geom_line(aes(colour = Ward)) +geom_point(aes(colour = Ward)) + xlab("Time") + ylab("Ward Occupancy") + ggtitle("Hourly Ward Occupancies") 
+    ggplot(df_to_plot, aes(x= df_to_plot[,1], y = value)) + geom_line(aes(colour = Ward))  +
+      xlab("Time") + ylab("Ward Occupancy") + ggtitle("Hourly Ward Occupancies") + theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+        theme(axis.text.x=element_text(angle=35, vjust=0.5)) + scale_x_datetime(date_breaks = no_of_pips_string) + 
+        scale_y_continuous(breaks = (pretty_breaks()))
 }
