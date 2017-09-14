@@ -68,11 +68,19 @@ interval_occupancy_day <- function(date_ymd_in_quotes, df = ordered_times_df, df
 
 #function to find instantaneous hospital occupancy at a given time
 
-hospital_occupancy <- function(date_and_time, df = ordered_times_df, time_in_col = "CSPAdmissionTime", time_out_col = "CSPDischargeTime"){
+hospital_occupancy <- function(date_and_time, df = ordered_times_df, time_in_col = "CSPAdmissionTime", time_out_col = "CSPDischargeTime", episode_col = "EpisodeNumber"){
   
+  #reduces data frame to only have one row per spell for each patient to avoid double counting. 
+  #skips doing this if there is no episode column in the data frame
+  #can't get get_spells to work here...
+  if(episode_col %in% colnames(df)){
+  df <- df[which(df[,episode_col] == 1),]
+  }
+
   #adds a "Stay" interval column to data frame
   df$Stay <- interval(df[,time_in_col], df[,time_out_col]) 
   
+  #checks how many stays overlap with the given time 
   test_interval <- interval(date_and_time, date_and_time)
   overlap_test <- int_overlaps(df$Stay, test_interval)
   sum(overlap_test, na.rm = T)
@@ -85,17 +93,29 @@ hospital_occupancy <- function(date_and_time, df = ordered_times_df, time_in_col
 #function to plot hourly occupancy in a given time interval
 # put the data frame you want to plot from into plot_df argument
 plot_hospital_occupancy <- function(start_date_time, end_date_time, plot_df = ordered_times_df){
+
   
   #creates a data frame to help with ggplot
   time <- seq(as.POSIXlt(start_date_time), as.POSIXlt(end_date_time), by="hours")
   hourly_occupancy <- sapply(time, hospital_occupancy, df = plot_df) 
   occupancy_df <- data.frame(time, hourly_occupancy)
   
+  #colours points that are over the threshold to red
   colours <- ifelse(hourly_occupancy >= 450, "red", "blue")  ###arbitrary max value - needs to be changed
   
-  ggplot(occupancy_df, aes(x=time, y=hourly_occupancy)) + geom_line() +geom_point(col = colours) + xlab("Time") + 
-    ylab("Hospitial Occupancy") + ggtitle("Hourly Hospital Occupancy") 
+  #variables to set pip spacing on x axis depending on length of time used
+  if(length(time)%/%12 == 0){
+    pip_spacing <- 1
+  } else {
+    pip_spacing <- length(time) %/% 12
+  }
   
+  pip_spacing_string <- paste(pip_spacing, "hour")
+  
+  ggplot(occupancy_df, aes(x=time, y=hourly_occupancy)) + geom_line() + geom_point(col = colours) + xlab("Time") + 
+    ylab("Hospitial Occupancy") + ggtitle("Hourly Hospital Occupancy") + theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+    theme(axis.text.x=element_text(angle=35, vjust=0.5)) + scale_x_datetime(date_breaks = pip_spacing_string) + 
+    scale_y_continuous(breaks = (pretty_breaks()))
 }
 
 
