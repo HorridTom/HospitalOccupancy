@@ -14,4 +14,5 @@ load_libraries <- function(){
   library(ggplot2)
   library(testthat)
   library(reshape2)
+  library(scales)
 }
