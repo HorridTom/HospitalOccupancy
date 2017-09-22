@@ -29,15 +29,11 @@ get_spells_sample <- function(spells_df, number_of_patients, ID_col_name = "Pseu
 
 interval_occupancy <- function (start_time, end_time, df = ordered_times_df, df_col = "Stay"){
   
-  #adds a "Stay" interval column to data frame
   df$Stay <- interval(df$CSPAdmissionTime, df$CSPDischargeTime)
-  
   test_interval <- interval(start_time, end_time)
   
   #checks whether any stays overlap with the given time interval 
   overlap_test <- int_overlaps(df[,df_col], test_interval)
-  
-  #gives the total number or rows that came back as true for overlapping
   sum(overlap_test, na.rm = T)
   
 }
@@ -51,14 +47,11 @@ interval_occupancy <- function (start_time, end_time, df = ordered_times_df, df_
 
 interval_occupancy_day <- function(date_ymd_in_quotes, df = ordered_times_df, df_col = "Stay"){
   
-  #adds a "Stay" interval column to data frame
+
   df$Stay <- interval(df$CSPAdmissionTime, df$CSPDischargeTime)
-  
-  #automatically sets start and end times to beginning and end of the day
   start_time <- paste(date_ymd_in_quotes, "00:00:00 BST", sep = " ")
   end_time <- paste(date_ymd_in_quotes, "23:59:59 BST", sep = " ")
-  
-  #as before
+
   test_interval <- interval(start_time, end_time)
   overlap_test <- int_overlaps(df[,df_col], test_interval)
   sum(overlap_test, na.rm = T)
@@ -74,16 +67,12 @@ interval_occupancy_day <- function(date_ymd_in_quotes, df = ordered_times_df, df
 hospital_occupancy <- function(date_and_time, df = ordered_times_df, time_in_col = "CSPAdmissionTime", time_out_col = "CSPDischargeTime", episode_col = "EpisodeNumber"){
   
   #reduces data frame to only have one row per spell for each patient to avoid double counting. 
-  #skips doing this if there is no episode column in the data frame
-  #can't get get_spells to work here...
   if(episode_col %in% colnames(df)){
   df <- df[which(df[,episode_col] == 1),]
   }
-
-  #adds a "Stay" interval column to data frame
+  
   df$Stay <- interval(df[,time_in_col], df[,time_out_col]) 
   
-  #checks how many stays overlap with the given time 
   test_interval <- interval(date_and_time, date_and_time)
   overlap_test <- int_overlaps(df$Stay, test_interval)
   sum(overlap_test, na.rm = T)
@@ -108,7 +97,6 @@ plot_hospital_occupancy <- function(start_date_time, end_date_time, plot_df = or
   #colours points that are over the threshold to red
   colours <- ifelse(hourly_occupancy >= 450, "red", "blue")  ###arbitrary max value - needs to be changed
   
-  #variables to set pip spacing on x axis depending on length of time 
   if(length(time)%/%12 == 0){
     pip_spacing <- 1
   } else {
@@ -117,9 +105,11 @@ plot_hospital_occupancy <- function(start_date_time, end_date_time, plot_df = or
   
   pip_spacing_string <- paste(pip_spacing, "hour")
   
-  ggplot(occupancy_df, aes(x=time, y=hourly_occupancy)) + geom_line() + geom_point(col = colours) + xlab("Time") + 
-    ylab("Hospitial Occupancy") + ggtitle("Hourly Hospital Occupancy") + theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
-    theme(axis.text.x=element_text(angle=35, vjust=0.5)) + scale_x_datetime(date_breaks = pip_spacing_string) + 
+  ggplot(occupancy_df, aes(x=time, y=hourly_occupancy)) + geom_line() + geom_point(col = colours) + 
+    xlab("Time") + ylab("Hospitial Occupancy") + ggtitle("Hourly Hospital Occupancy") + 
+    theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+    theme(axis.text.x=element_text(angle=35, vjust=0.5)) + 
+    scale_x_datetime(date_breaks = pip_spacing_string) + 
     scale_y_continuous(breaks = (pretty_breaks()))
 }
 
