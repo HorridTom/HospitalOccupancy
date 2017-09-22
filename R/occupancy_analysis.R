@@ -25,6 +25,7 @@ get_spells_sample <- function(spells_df, number_of_patients, ID_col_name = "Pseu
 
 #function to find occupancy between a certain time interval
 #includes any spells, any part of which overlaps the specified interval
+#require(lubridate)
 
 interval_occupancy <- function (start_time, end_time, df = ordered_times_df, df_col = "Stay"){
   
@@ -46,6 +47,7 @@ interval_occupancy <- function (start_time, end_time, df = ordered_times_df, df_
 
 #function to find interval occupancy on a given day
 #includes any spells, any part of which overlaps with the given day
+#require(lubridate)
 
 interval_occupancy_day <- function(date_ymd_in_quotes, df = ordered_times_df, df_col = "Stay"){
   
@@ -67,6 +69,7 @@ interval_occupancy_day <- function(date_ymd_in_quotes, df = ordered_times_df, df
 
 
 #function to find instantaneous hospital occupancy at a given time
+#require(lubridate)
 
 hospital_occupancy <- function(date_and_time, df = ordered_times_df, time_in_col = "CSPAdmissionTime", time_out_col = "CSPDischargeTime", episode_col = "EpisodeNumber"){
   
@@ -92,18 +95,20 @@ hospital_occupancy <- function(date_and_time, df = ordered_times_df, time_in_col
 
 #function to plot hourly occupancy in a given time interval
 # put the data frame you want to plot from into plot_df argument
-plot_hospital_occupancy <- function(start_date_time, end_date_time, plot_df = ordered_times_df){
+#require(lubridate), require(ggplot), require(scales)
+
+plot_hospital_occupancy <- function(start_date_time, end_date_time, plot_df = ordered_times_df, time_in_col = "CSPAdmissionTime", time_out_col = "CSPDischargeTime", episode_col = "EpisodeNumber"){
 
   
   #creates a data frame to help with ggplot
   time <- seq(as.POSIXlt(start_date_time), as.POSIXlt(end_date_time), by="hours")
-  hourly_occupancy <- sapply(time, hospital_occupancy, df = plot_df) 
+  hourly_occupancy <- sapply(time, hospital_occupancy, df = plot_df, time_in_col, time_out_col, episode_col) 
   occupancy_df <- data.frame(time, hourly_occupancy)
   
   #colours points that are over the threshold to red
   colours <- ifelse(hourly_occupancy >= 450, "red", "blue")  ###arbitrary max value - needs to be changed
   
-  #variables to set pip spacing on x axis depending on length of time used
+  #variables to set pip spacing on x axis depending on length of time 
   if(length(time)%/%12 == 0){
     pip_spacing <- 1
   } else {
